@@ -62,17 +62,48 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 %part 1
-a1 = [ones(m,1)  X];
-a2 = sigmoid(Theta1 * a1');
-a2 = [ones(m,1) a2'];
 
-a3 = sigmoid(Theta2 * a2');
 
-yk = zeros(num_labels, m);
-for i = m;
+A1 = [ones(1,m) ; X'];
+Z2 = Theta1 * A1;
+A2 = sigmoid(Z2);
+A2 = [ones(1,m) ; A2];
+Z3 = Theta2 * A2;
+A3 = sigmoid(Z3);
+
+h0 = A3;
+for i = 1:m
   yk(y(i),i) = 1;
 endfor
-J = (1/m) * sum ( sum (  (-yk) .* log(a3)  -  (1-yk) .* log(1-a3))); 
+J = (1/m) * sum ( sum (  (-yk) .* log(h0)  -  (1-yk) .* log(1-h0))); 
+%part 2
+retheta = sum(sum(Theta1(:, 2:end).^2)) + sum(sum(Theta2(:, 2:end) .^ 2));
+J = J + (lambda/(2*m)) * retheta;
+%part 3
+
+
+Theta1NoBias = Theta1(:, 2:end);
+Theta2NoBias = Theta2(:, 2:end);
+Delta1 = 0;
+Delta2 = 0;
+
+for t = 1:m
+  a1 = [1; X(t, :)']; 
+  z2 = Theta1 * a1;
+  a2 = [1; sigmoid(z2)]; 
+  z3 = Theta2 * a2;
+  a3 = sigmoid(z3);
+  d3 = a3 - yk(: , t);
+  d2 = (Theta2NoBias' * d3) .* sigmoidGradient(z2);
+  Delta2 = Delta2 + (d3 * a2');
+  Delta1 = Delta1 + (d2 * a1');
+endfor
+Theta1_grad = (1 / m) * Delta1;
+Theta2_grad = (1 / m) * Delta2;
+Theta1_grad(:, 2:end) += ((lambda / m) * Theta1NoBias);
+Theta2_grad(:, 2:end) += ((lambda / m) * Theta2NoBias);
+
+
 %z2 = Theta1 * a1';
 %for i = 1:m;
 %  z2 = Theta1 * a1(i,:)';
